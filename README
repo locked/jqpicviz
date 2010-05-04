@@ -1,0 +1,8 @@
+== jqPlot plugin to display picviz graph ==
+
+=== Requirements ===
+You'll need jquery+jqplot libraries
+
+=== Install ===
+Example in index.php
+
