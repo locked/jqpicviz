@@ -1,0 +1,33 @@
+body {
+	align:center;
+	font-size:0.9em;
+}
+
+#header, #footer {
+	width:802px;
+	height:16px;
+	margin:0px auto 0px auto;
+	/*border-top:1px solid #ddd;
+	border-right:1px solid #ddd;
+	border-left:1px solid #ddd;*/
+	font-size:1em;
+	padding:2px;
+	color:#222;
+	background-color:#ddd;
+}
+#footer {
+	color:#444;
+	background-color:#ddd;
+	text-align:center;
+}
+
+#content {
+	width:800px;
+	margin:0px auto 0px auto;
+	border:1px solid #ddd;
+	padding:0px 2px 10px 2px;
+}
+
+a {
+	color:#444;
+}
