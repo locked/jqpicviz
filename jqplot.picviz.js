@@ -12,6 +12,7 @@
  * If you are feeling kind and generous, consider supporting the project by
  * making a donation at: http://www.jqplot.com/donate.php .
  */
+    
 (function($) {
     // Class: $.jqplot.PicVizRenderer
     // The default line renderer for jqPlot, this class has no options beyond the <Series> class.
@@ -22,9 +23,6 @@
     
     // called with scope of series.
     $.jqplot.PicVizRenderer.prototype.init = function(options) {
-        //this.tickRenderer = $.jqplot.PicVizTickRenderer;
-        //this.tickRenderer = $.jqplot.CategoryAxisRenderer;
-
         $.extend(true, this.renderer, options);
         // set the shape renderer options
         var opts = {lineJoin:'round', lineCap:'round', fill:this.fill, isarc:false, strokeStyle:this.color, fillStyle:this.fillColor, lineWidth:this.lineWidth, closePath:this.fill};
@@ -67,6 +65,7 @@
         var pgd = [];
         for (var i=0; i<data.length; i++) {
             if (data[i] != null) {
+                //$("#debug").append("final:"+data[i][2]+"<br>");
                 gd.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, data[i][1])]);
             }
         }
@@ -149,7 +148,7 @@
     
     // called with context of legend
     $.jqplot.PicVizLegendRenderer.prototype.draw = function() {
-/*
+this.show = false;
         var legend = this;
         if (this.show) {
             var series = this._series;
@@ -177,7 +176,7 @@
             }
         }        
         return this._elem;
-*/
+
     };
     
 
@@ -188,6 +187,7 @@
     // setup default renderers for axes and legend so user doesn't have to
     // called with scope of plot
     function preInit(target, data, options) {
+        data = data || {};
         options = options || {};
         options.axesDefaults = options.axesDefaults || {};
         options.axes = options.axes || {};
@@ -207,12 +207,14 @@
                 }
             }
         }
-        
+
         if (setopts) {
             options.axes.xaxis.renderer = $.jqplot.CategoryAxisRenderer;
             options.axes.yaxis.renderer = $.jqplot.LinearAxisRenderer;
             options.axes.yaxis.showTicks = false;
             options.axes.yaxis.numberTicks = 0;
+            options.axes.yaxis.min = 0;
+            options.axes.yaxis.max = 1000;
             options.legend.renderer = $.jqplot.PicVizLegendRenderer;
             //options.legend.preDraw = true;
         }
@@ -220,7 +222,47 @@
 
     // called with scope of plot
     function postParseOptions(options) {
+        var indices = {};
+        var minmax = {};
+        // Convert string to values and get min/max
         for (var i=0; i<this.series.length; i++) {
+            for (var di=0; di<this.series[i].data.length; di++) {
+                var v = this.series[i].data[di][1];
+                this.series[i].data[di][2] = v;
+                if( is_string( v ) ) {
+                    //$("#debug").append("before:"+di+" == "+v+"<br>");
+                    if( indices[di]==null ) indices[di] = [];
+                    var vnotin=true;
+                    for( var vi=0; vi<indices[di].length; vi++ ) {
+                        vv = indices[di][vi];
+                        //$("#debug").append("chk vv:"+vv+" v:"+v+"<br>");
+                        if( vv==v ) vnotin=false;
+                    }
+                    if( vnotin ) {
+                        //$("#debug").append("push:"+v+"<br>");
+                        indices[di].push( v );
+                    }
+                    for( var vi=0; vi<indices[di].length; vi++ ) {
+                        vv = indices[di][vi];
+                        //$("#debug").append("vv:"+vv+"<br>");
+                    }
+                    this.series[i].data[di][1] = indices[di].length;
+                } else {
+                    this.series[i].data[di][1] = parseInt(this.series[i].data[di][1]);
+		}
+
+                // Update min/max
+                if( minmax[di]==null ) minmax[di] = [99999999,0];
+                if( this.series[i].data[di][1]<minmax[di][0] ) minmax[di][0] = this.series[i].data[di][1];
+                if( this.series[i].data[di][1]>minmax[di][1] ) minmax[di][1] = this.series[i].data[di][1];
+                //$("#debug").append("minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
+            }
+        }
+        for (var i=0; i<this.series.length; i++) {
+            // Apply the normalization with min/max values
+            for (var di=0; di<this.series[i].data.length; di++) {
+                this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(minmax[di][1]-minmax[di][0]))*980+10;
+            }
             this.series[i].seriesColors = this.seriesColors;
             this.series[i].colorGenerator = this.colorGenerator;
         }
