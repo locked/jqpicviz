@@ -211,8 +211,8 @@ this.show = false;
         if (setopts) {
             options.axes.xaxis.renderer = $.jqplot.CategoryAxisRenderer;
             options.axes.yaxis.renderer = $.jqplot.LinearAxisRenderer;
-            options.axes.yaxis.showTicks = false;
-            options.axes.yaxis.numberTicks = 0;
+            options.axes.yaxis.showTicks = true; //false;
+            options.axes.yaxis.numberTicks = 3; //0;
             options.axes.yaxis.min = 0;
             options.axes.yaxis.max = 1000;
             options.legend.renderer = $.jqplot.PicVizLegendRenderer;
@@ -236,17 +236,20 @@ this.show = false;
                     for( var vi=0; vi<indices[di].length; vi++ ) {
                         vv = indices[di][vi];
                         //$("#debug").append("chk vv:"+vv+" v:"+v+"<br>");
-                        if( vv==v ) vnotin=false;
+                        if( vv==v ) {
+                            vnotin=false;
+                            this.series[i].data[di][1] = vi+1;
+                        }
                     }
                     if( vnotin ) {
                         //$("#debug").append("push:"+v+"<br>");
                         indices[di].push( v );
+                        this.series[i].data[di][1] = indices[di].length;
                     }
                     for( var vi=0; vi<indices[di].length; vi++ ) {
                         vv = indices[di][vi];
                         //$("#debug").append("vv:"+vv+"<br>");
                     }
-                    this.series[i].data[di][1] = indices[di].length;
                 } else {
                     this.series[i].data[di][1] = parseInt(this.series[i].data[di][1]);
 		}
@@ -261,7 +264,11 @@ this.show = false;
         for (var i=0; i<this.series.length; i++) {
             // Apply the normalization with min/max values
             for (var di=0; di<this.series[i].data.length; di++) {
-                this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(minmax[di][1]-minmax[di][0]))*980+10;
+                var v = this.series[i].data[di][1];
+                var div = minmax[di][1]-minmax[di][0];
+                div = div==0?div=1:div;
+                this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(div))*980+10;
+                //$("#debug").append("oldv:"+v+" newv:"+this.series[i].data[di][1]+"minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
             }
             this.series[i].seriesColors = this.seriesColors;
             this.series[i].colorGenerator = this.colorGenerator;
