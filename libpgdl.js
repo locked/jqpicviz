@@ -18,10 +18,36 @@ function rtrim(str, chars) {
 
 
 function parseValue( value ) {
-	var params = value.split( "=" );
 	var key = null;
 	var val = null;
-	//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE:"+value+"<br>");
+	var type = null;
+	
+	//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE CHK:"+value+"<br>");
+	var matches = value.match(/\s*(\w+\d*)\s+(\w+\d*)\s*[\[;,\]=\w\d\s]*/i);
+	if( matches && matches.length>2 ) {
+		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value matche2:"+matches[1]+" matche2:"+matches[2]+"<br>");
+		type = matches[1];
+		switch( type ) {
+		case "timeline":
+		case "enum":
+		case "ipv4":
+		case "ipv6":
+		case "string":
+		case "integer":
+		break;
+		default:
+			type = null;
+		}
+	/*for( p in matches ) {
+		param = matches[p];
+		if( param && param.length>1 ) {
+			type = trim( param ).split(" ");
+			$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;PARSE VALUE:"+param+" type:"+type+"<br>");
+		}
+	}*/
+	}
+	
+	var params = value.split( "=" );
 	for( p in params ) {
 		param = trim( params[p] );
 		if( param.length==0 ) continue;
@@ -35,39 +61,35 @@ function parseValue( value ) {
 		}
 		if( p==0 ) key = param;
 		else if( p==1 ) val = param;
+		if( key=="relative" ) return null;
+		if( key!=null && val!=null ) {
+			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE kv:"+key+"=="+val+" type:"+type+"<br>");
+			return [key,val,type];
+		}
 	}
-	//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE kv:"+key+"=="+val+"<br>");
-	if( key!=null && val!=null ) {
-		return [key,val];
-	}
+	
 	return null;
 }
 
 function parseLine( line ) {
 	var params = line.split( "," );
-	var matches = line.match(/([a-zA-Z]+="[ \d\w_:,.\/\(\)-]+")+[, ;]*/g);
-	//$("#debug").append("matches:"+matches);
+	//var matches = line.match(/([a-zA-Z]+[ ]*=[ ]*"[ \d\w_:,.\/\(\)-]+")+[, ;]*/g);
+	//var matches = line.match(/\w+\s*\w+\s*\[{0,1}\w+\s*=\s*"[ \d\w_:,.\/\(\)-]*"/g);
+	var matches = line.match(/[\w+\s*\w+\s*\[]{0,1}\w+\s*=\s*"[ \d\w_:,@.\/\(\)-?%]*"/g);
+	//$("#debug").append("matches:"+matches+"<br>");
 	var values = {};
 	var count=0;
-	/*
-	for( p in params ) {
-		param = params[p];
-		vals = parseValue( param );
-		if( vals!=null && vals!=[] && vals!="" ) {
-			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD PARAM:"+vals+"<br>");
-			values[vals[0]] = vals[1];
-			count++;
-		}
-	}
-	*/
 	
+	//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;START parseLine  -- matches:"+matches+"<br>");
 	for( p in matches ) {
 		param = matches[p];
 		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;PARSE PARAM:"+param+"<br>");
 		vals = parseValue( param );
 		if( vals!=null && vals!=[] && vals!="" ) {
-			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD PARAM:"+vals[1]+"<br>");
+			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD key:"+vals[0]+" val:"+vals[1]+" type:"+vals[2]+"<br>");
 			values[vals[0]] = vals[1];
+			if( vals[2] )
+				values['_type'] = vals[2];
 			count++;
 		}
 	}
@@ -81,6 +103,7 @@ function parsePgdl(e) {
 	var blocs = str.split( "{" );
 	var header = [];
 	var axes = [];
+	var axes_types = [];
 	var data = [];
 	for( b in blocs ) {
 		bloc = blocs[b];
@@ -91,16 +114,17 @@ function parsePgdl(e) {
 			var lines = content.split( ";" );
 			for( v in lines ) {
 				line = lines[v];
-				line_values = parseLine( line );
-				if( line_values!={} && line_values!=null && line_values!="" ) {
+				line_values_types = parseLine( line );
+				
+				if( line_values_types!={} && line_values_types!=null && line_values_types!="" ) {
 					if( blocname=="header" ) {
 						//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD blocname:"+blocname+":"+line_values.title+"<br>");
-						header.push( line_values );
+						header.push( line_values_types );
 					} else if( blocname=="axes" ) {
 						//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD blocname:"+blocname+":"+line_values+"<br>");
-						axes.push( line_values );
+						axes.push( line_values_types );
 					} else if( blocname=="data" ) {
-						data.push( line_values );
+						data.push( line_values_types );
 					}
 				}
 			}

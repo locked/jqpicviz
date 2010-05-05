@@ -220,6 +220,24 @@ this.show = false;
         }
     }
 
+function type_is_string( type ) {
+	switch( type ) {
+	case "timeline":
+	case "enum":
+	case "ipv4":
+	case "ipv6":
+	case "string":
+	//case "":
+		return true;
+	break;
+	case "integer":
+		return false;
+	break;
+	default:
+		return false;
+	}
+}
+
     // called with scope of plot
     function postParseOptions(options) {
         var indices = {};
@@ -229,8 +247,9 @@ this.show = false;
             for (var di=0; di<this.series[i].data.length; di++) {
                 var v = this.series[i].data[di][1];
                 this.series[i].data[di][2] = v;
-                if( is_string( v ) ) {
-                    //$("#debug").append("before:"+di+" == "+v+"<br>");
+		//$("#debug").append( "postParseOptions VAL:"+v+"<br>" );
+                if( type_is_string( options.data_types[di] ) || is_string( v ) ) {
+                    //$("#debug").append("is string -- datatype:"+options.data_types[di]+" di:"+di+" v:"+v+"<br>");
                     if( indices[di]==null ) indices[di] = [];
                     var vnotin=true;
                     for( var vi=0; vi<indices[di].length; vi++ ) {
