@@ -50,25 +50,93 @@ $(document).ready(function(){
 
 function convertToPgdl( e ) {
 	var logtype = $("#logtype").val();
-	//$("#debug").append("logtype:"+logtype+"<br>");
 	var data = e.val();
-	$.post('convertPgdl.php', {'logtype':logtype, 'data':data}, function(pgdl) {
-		$('#pgdl').html(pgdl);
-		updatePlot( $('#pgdl') );
+	$.post('convertPgdl.php', {'logtype':logtype, 'data':data}, function(pgdl_txt) {
+		$('#pgdl').html(pgdl_txt);
+		var pgdl = parsePgdl( $('#pgdl') );
+		showLayers( pgdl );
+		updatePlot( pgdl );
 	});
 }
 
-function updatePlot( e ) {
+
+function parseAndUpdatePlot( e ) {
 	var pgdl = parsePgdl( e );
+	updatePlot( pgdl );
+}
+
+function changeLayer( e ) {
+	new_cl = [];
+	for( l in current_layers ) {
+		current_layer = current_layers[l];
+		if( current_layer==e.value ) {
+			$("#debug").append("changeLayer current_layer:"+current_layer+" e.checked:"+e.checked+" e.value:"+e.value+"<br>");
+			if( e.checked ) new_cl.push( current_layer );
+		} else
+			new_cl.push( current_layer );
+	}
+	current_layers = new_cl;
+	updatePlot( current_pgdl );
+}
+function showLayers( pgdl ) {
+	var layers = getLayers( pgdl );
+	if( layers ) {
+		for( l in layers ) {
+			//$("#debug").append("---- NEWLINE ---- layer:"+layers[l]+"<br>");
+			$("#layers").append( "<input checked onchange='changeLayer(this)' type='checkbox' value='"+layers[l]+"' name='layer_"+layers[l]+"'>"+layers[l] );
+		}
+	}
+}
+
+function getLayers( pgdl ) {
+	var layers = [];
+	layers.push( "unassociated" );
+	for( l in pgdl.data ) {
+		line = pgdl.data[l];
+		for( a in pgdl.axes ) {
+			if( line.inlayer ) {
+				var found = false;
+				for( la in layers ) {
+					if( layers[la]==line.inlayer ) {
+						found = true;
+						break;
+					}
+				}
+				if( !found )
+					layers.push( line.inlayer );
+			}
+		}
+	}
+	return layers;
+}
+
+var current_layers = null;
+var current_pgdl = null;
+function updatePlot( pgdl ) {
+	current_pgdl = pgdl;
 	var data = [];
+	var layers = getLayers( pgdl );
+	if( current_layers==null ) current_layers = layers;
 	for( l in pgdl.data ) {
 		line = pgdl.data[l];
 		var lineplot = [];
 		//$("#debug").append("---- NEWLINE ----<br>");
-		for( d in line ) {
-			v = line[d];
-			lineplot.push( v );
-			//$("#debug").append("DATA:"+d+":"+v+"<br>");
+		//for( d in line ) {
+		for( a in pgdl.axes ) {
+			vname = pgdl.axes[a]._name;
+			v = line[vname];
+			var show = false;
+			for( la in current_layers ) {
+				current_layer = current_layers[la];
+				if( (current_layer=="unassociated" && !line.inlayer)
+				 || (current_layer!="unassociated" && line.inlayer==current_layer) ) {
+					show = true;
+					break;
+				}
+			}
+			//$("#debug").append("DATA: a:"+a+" vname:"+vname+" v:"+v+" inlayer:"+line.inlayer+"<br>");
+			if( show )
+				lineplot.push( v );
 		}
 		data.push( lineplot );
 	}
@@ -87,7 +155,7 @@ function updatePlot( e ) {
 		grid:{drawGridLines:false},
 		data_types:data_types,
 		highlighter: {yvalues: 2, sizeAdjust: 7.5, formatString:'<div style="display:none;">%s%s</div><table class="jqplot-highlighter"></tr><tr><td></td><td>%s</td></tr></table>'},
-		cursor: {show: false}
+		cursor: {zoom:true, show: true, showTooltip:false, clickReset:true}
 	}).redraw();
 }
 </script> 
@@ -97,6 +165,7 @@ function updatePlot( e ) {
 	<div id="header">PGDL HTML5 Viewer - PicViz For The Web :)</div>
 	<div id="content">
 	<div id="chart" style="margin-top:20px; margin-left:20px; width:700px; height:400px;"></div> 
+	<div id="layers"></div>
 	<div id="debug"></div>
 	<form id="log" enctype="multipart/form-data" action="" method="POST">
 	<input type="file" name="logfile" onchange="$('#startupload').click()"/>
@@ -136,11 +205,11 @@ data {
 ?>	<textarea rows="10" cols="80" id="pgdl"><?= $text ?></textarea>
 	<br>
 	Choose your log format: <select id="logtype">
-	<option value="syslog">syslog</option>
 	<option value="apache_access">apache access</option>
+	<option value="syslog">syslog</option>
 	</select>
 	<br>
-	Next step, <button onclick="convertToPgdl($('#pgdl'));">Convert LOG to PGDL and Create Graph</button> (Can take a while and freeze your browser if a lot of data) <button onclick="updatePlot($('#pgdl'));">Create Graph</button>
+	Next step, <button onclick="convertToPgdl($('#pgdl'));">Convert LOG to PGDL and Create Graph</button> (Can take a while and freeze your browser if a lot of data) <button onclick="parseAndUpdatePlot($('#pgdl'));">Create Graph</button>
 	</div>
 	<div id="footer">Made by Lunatic Systems, based on <a href="http://wallinfire.net/picviz/">picviz</a> - <a href="http://github.com/locked/jqpicviz">Sources here</a></div>
 </body> 

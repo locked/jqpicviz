@@ -286,7 +286,13 @@ function type_is_string( type ) {
                 var v = this.series[i].data[di][1];
                 var div = minmax[di][1]-minmax[di][0];
                 div = div==0?div=1:div;
-                this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(div))*980+10;
+                if( type_is_string( options.data_types[di] ) ) {
+                    for( var ii=0; ii<indices[di].length; ii++ )
+                        if( indices[di][ii]==this.series[i].data[di][2] ) break;
+                    //$("#debug").append("SET v:"+v+" di:"+di+" dt:"+options.data_types[di]+" len:"+indices[di].length+" ii:"+ii+"<br>");
+                    this.series[i].data[di][1] = (1000/(indices[di].length+1))*(ii+1);
+                } else
+                    this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(div))*980+10;
                 //$("#debug").append("oldv:"+v+" newv:"+this.series[i].data[di][1]+"minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
             }
             this.series[i].seriesColors = this.seriesColors;

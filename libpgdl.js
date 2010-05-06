@@ -21,12 +21,14 @@ function parseValue( value ) {
 	var key = null;
 	var val = null;
 	var type = null;
+	var vname = null;
 	
 	//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE CHK:"+value+"<br>");
-	var matches = value.match(/\s*(\w+\d*)\s+(\w+\d*)\s*[\[;,\]=\w\d\s]*/i);
+	var matches = value.match(/\s*(\w+)\s+(\w+)\s*[\[;,\]=\w\d\s]*/i);
 	if( matches && matches.length>2 ) {
-		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value matche2:"+matches[1]+" matche2:"+matches[2]+"<br>");
 		type = matches[1];
+		vname = matches[2];
+		/*
 		switch( type ) {
 		case "timeline":
 		case "enum":
@@ -37,14 +39,8 @@ function parseValue( value ) {
 		break;
 		default:
 			type = null;
-		}
-	/*for( p in matches ) {
-		param = matches[p];
-		if( param && param.length>1 ) {
-			type = trim( param ).split(" ");
-			$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;PARSE VALUE:"+param+" type:"+type+"<br>");
-		}
-	}*/
+		}*/
+		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value matche2:"+matches[1]+" matche2:"+matches[2]+" type:"+type+"<br>");
 	}
 	
 	var params = value.split( "=" );
@@ -63,8 +59,9 @@ function parseValue( value ) {
 		else if( p==1 ) val = param;
 		if( key=="relative" ) return null;
 		if( key!=null && val!=null ) {
-			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE kv:"+key+"=="+val+" type:"+type+"<br>");
-			return [key,val,type];
+			//if( key=="inlayer" )
+			//	$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE kv:"+key+"=="+val+" type:"+type+"<br>");
+			return [key,val,type,vname];
 		}
 	}
 	
@@ -73,9 +70,8 @@ function parseValue( value ) {
 
 function parseLine( line ) {
 	var params = line.split( "," );
-	//var matches = line.match(/([a-zA-Z]+[ ]*=[ ]*"[ \d\w_:,.\/\(\)-]+")+[, ;]*/g);
-	//var matches = line.match(/\w+\s*\w+\s*\[{0,1}\w+\s*=\s*"[ \d\w_:,.\/\(\)-]*"/g);
-	var matches = line.match(/[\w+\s*\w+\s*\[]{0,1}\w+\s*=\s*"[ \d\w_:,@.\/\(\)-?%]*"/g);
+	//var matches = line.match(/[\w+\s*\w+\s*\[]{0,1}\w+\s*=\s*"[ \d\w_:,@.\/\(\)-?%]*"/g);
+	var matches = line.match(/[\w*\s*\[]*\w+\s*=\s*"[ \d\w_:,!@.\/\(\)-?%]*"/g);
 	//$("#debug").append("matches:"+matches+"<br>");
 	var values = {};
 	var count=0;
@@ -86,10 +82,12 @@ function parseLine( line ) {
 		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;PARSE PARAM:"+param+"<br>");
 		vals = parseValue( param );
 		if( vals!=null && vals!=[] && vals!="" ) {
-			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD key:"+vals[0]+" val:"+vals[1]+" type:"+vals[2]+"<br>");
+			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;ADD key:"+vals[0]+" val:"+vals[1]+" type:"+vals[2]+" name:"+vals[3]+"<br>");
 			values[vals[0]] = vals[1];
 			if( vals[2] )
 				values['_type'] = vals[2];
+			if( vals[3] )
+				values['_name'] = vals[3];
 			count++;
 		}
 	}
