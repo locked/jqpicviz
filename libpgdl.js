@@ -1,22 +1,9 @@
 /**
  * Copyright (c) 2010 Adam Etienne
- * This software is currently available for use in all personal or commercial projects 
+ * libpgdl is currently available for use in all personal or commercial projects 
  * under both the MIT and GPL version 2.0 licenses. This means that you can 
  * choose the license that best suits your project and use it accordingly.
  */
-function trim(str, chars) {
-	return ltrim(rtrim(str, chars), chars);
-}
-function ltrim(str, chars) {
-	chars = chars || "\\s";
-	return str.replace(new RegExp("^[" + chars + "]+", "g"), "");
-}
-function rtrim(str, chars) {
-	chars = chars || "\\s";
-	return str.replace(new RegExp("[" + chars + "]+$", "g"), "");
-}
-
-
 function parseValue( value ) {
 	var key = null;
 	var val = null;
@@ -28,29 +15,17 @@ function parseValue( value ) {
 	if( matches && matches.length>2 ) {
 		type = matches[1];
 		vname = matches[2];
-		/*
-		switch( type ) {
-		case "timeline":
-		case "enum":
-		case "ipv4":
-		case "ipv6":
-		case "string":
-		case "integer":
-		break;
-		default:
-			type = null;
-		}*/
 		//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;value matche2:"+matches[1]+" matche2:"+matches[2]+" type:"+type+"<br>");
 	}
 	
 	var params = value.split( "=" );
 	for( p in params ) {
-		param = trim( params[p] );
+		param = $.trim( params[p] );
 		if( param.length==0 ) continue;
 		if( param.indexOf('"')>-1 )
-			param = trim( param.substring( param.indexOf('"')+1, param.lastIndexOf('"') ) );
+			param = $.trim( param.substring( param.indexOf('"')+1, param.lastIndexOf('"') ) );
 		else {
-			param = trim( param );
+			param = $.trim( param );
 			param = param.substring( param.lastIndexOf(' ')+1, param.length );
 			param = param.substring( param.lastIndexOf('\[')+1, param.length );
 			param = param.substring( param.lastIndexOf('\t')+1, param.length );
@@ -59,8 +34,6 @@ function parseValue( value ) {
 		else if( p==1 ) val = param;
 		if( key=="relative" ) return null;
 		if( key!=null && val!=null ) {
-			//if( key=="inlayer" )
-			//	$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VALUE kv:"+key+"=="+val+" type:"+type+"<br>");
 			return [key,val,type,vname];
 		}
 	}
@@ -70,7 +43,6 @@ function parseValue( value ) {
 
 function parseLine( line ) {
 	var params = line.split( "," );
-	//var matches = line.match(/[\w+\s*\w+\s*\[]{0,1}\w+\s*=\s*"[ \d\w_:,@.\/\(\)-?%]*"/g);
 	var matches = line.match(/[\w*\s*\[]*\w+\s*=\s*"[ \d\w_:,!@.\/\(\)-?%]*"/g);
 	//$("#debug").append("matches:"+matches+"<br>");
 	var values = {};
@@ -108,7 +80,6 @@ function parsePgdl(e) {
 		if( bloc.indexOf('}')>0 ) {
 			// Block content
 			content = bloc.substring( 0, bloc.indexOf('}') );
-			//$("#debug").append("CONTENT: header:"+header+" content:"+content+"<br>");
 			var lines = content.split( ";" );
 			for( v in lines ) {
 				line = lines[v];
@@ -126,20 +97,42 @@ function parsePgdl(e) {
 					}
 				}
 			}
-			blocname = trim( bloc.substr( bloc.indexOf('}')+2, 250 ) );
+			blocname = $.trim( bloc.substr( bloc.indexOf('}')+2, 250 ) );
 			//$("#debug").append("&nbsp;&nbsp;&nbsp;&nbsp;NEW bn:"+blocname+":"+blocname.lastIndexOf('\r')+"=="+blocname.lastIndexOf('\n')+"<br>");
 		} else {
 			// Block header
-			blocname = trim( bloc );
-			/*
-			blocname = blocname.substring( blocname.lastIndexOf('\t')+1, blocname.length );
-			blocname = blocname.substring( blocname.lastIndexOf('\r')+1, blocname.length );
-			blocname = blocname.substring( blocname.lastIndexOf('\n')+1, blocname.length );
-			blocname = blocname.substring( blocname.lastIndexOf('\r\n')+1, blocname.length );
-			*/
+			blocname = $.trim( bloc );
 		}
-		//var blocs = str.split( "{" );
         }
 	//$("#debug").append("header:"+header[0].title+" axes:"+axes[1].label+" data:"+data[0].time+"<br>");
 	return {'header':header, 'axes':axes, 'data':data};
 }
+
+
+function is_string(v) {
+	return parseInt(v)==v?false:true;
+}
+
+
+function getLayers( pgdl ) {
+	var layers = [];
+	layers.push( "unassociated" );
+	for( l in pgdl.data ) {
+		line = pgdl.data[l];
+		for( a in pgdl.axes ) {
+			if( line.inlayer ) {
+				var found = false;
+				for( la in layers ) {
+					if( layers[la]==line.inlayer ) {
+						found = true;
+						break;
+					}
+				}
+				if( !found )
+					layers.push( line.inlayer );
+			}
+		}
+	}
+	return layers;
+}
+

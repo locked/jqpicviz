@@ -1,6 +1,6 @@
 /**
  * Copyright (c) 2010 Adam Etienne
- * jqPlot is currently available for use in all personal or commercial projects 
+ * jqPlot picviz plugin is currently available for use in all personal or commercial projects 
  * under both the MIT and GPL version 2.0 licenses. This means that you can 
  * choose the license that best suits your project and use it accordingly. 
  *
@@ -65,7 +65,6 @@
         var pgd = [];
         for (var i=0; i<data.length; i++) {
             if (data[i] != null) {
-                //$("#debug").append("final:"+data[i][2]+"<br>");
                 gd.push([xp.call(this._xaxis, data[i][0]), yp.call(this._yaxis, data[i][1])]);
             }
         }
@@ -75,7 +74,7 @@
 
     // called within scope of series.
     $.jqplot.PicVizRenderer.prototype.draw = function(ctx, gd, options) {
-        var i;
+        //var i;
         var opts = (options != undefined) ? options : {};
         var shadow = (opts.shadow != undefined) ? opts.shadow : this.shadow;
         var showLine = (opts.showLine != undefined) ? opts.showLine : this.showLine;
@@ -84,9 +83,11 @@
         ctx.save();
         if (gd.length) {
             if (showLine) {
-		if (shadow) {
+		/*
+                Shadow is for dush. Plus it is slow and sometime seams buggy
+                if (shadow) {
 		    this.renderer.shadowRenderer.draw(ctx, gd, opts);
-		}
+		}*/
 		var j=gd[0][0];
 		var step = gd[1][0] - gd[0][0];
 		var shopt = {fill:false, isarc:false, strokeStyle:'#000000', fillStyle:'#000000', lineWidth:1, closePath:true};
@@ -124,14 +125,6 @@
         $.jqplot.LinearAxisRenderer.prototype.init.call(this);
         this.tickRenderer = $.jqplot.PicVizTickRenderer;
         //$.extend(true, this, options);
-        /*
-        this._dataBounds = {min:0, max:100};
-        this.min = 0;
-        this.max = 100;
-        this.ticks = [];
-        this.show = false;
-        this.showTicks = false;
-        */
         this.numberTicks = 3; //len(this._series);
         this.showMark = false;
     };
@@ -148,7 +141,7 @@
     
     // called with context of legend
     $.jqplot.PicVizLegendRenderer.prototype.draw = function() {
-this.show = false;
+        this.show = false;  // Disable the legend
         var legend = this;
         if (this.show) {
             var series = this._series;
@@ -207,34 +200,34 @@ this.show = false;
                 }
             }
         }
-
+        //options.shadow = false;
         if (setopts) {
             options.axes.xaxis.renderer = $.jqplot.CategoryAxisRenderer;
             options.axes.yaxis.renderer = $.jqplot.LinearAxisRenderer;
             options.axes.yaxis.showTicks = true; //false;
-            options.axes.yaxis.numberTicks = 3; //0;
+            options.axes.yaxis.numberTicks = 2; //0;
             options.axes.yaxis.min = 0;
             options.axes.yaxis.max = 1000;
             options.legend.renderer = $.jqplot.PicVizLegendRenderer;
-            //options.legend.preDraw = true;
         }
     }
 
-function type_is_string( type ) {
+function type_of_axes( type ) {
 	switch( type ) {
 	case "timeline":
+		return "time";
+	break;
 	case "enum":
 	case "ipv4":
 	case "ipv6":
 	case "string":
-	//case "":
-		return true;
+		return "string";
 	break;
 	case "integer":
-		return false;
+		return "integer";
 	break;
 	default:
-		return false;
+		return "string";
 	}
 }
 
@@ -248,51 +241,56 @@ function type_is_string( type ) {
                 var v = this.series[i].data[di][1];
                 this.series[i].data[di][2] = v;
 		//$("#debug").append( "postParseOptions VAL:"+v+"<br>" );
-                if( type_is_string( options.data_types[di] ) || is_string( v ) ) {
-                    //$("#debug").append("is string -- datatype:"+options.data_types[di]+" di:"+di+" v:"+v+"<br>");
+                if( type_of_axes( options.data_types[di] )=="string" ) {
+                    // String values, we use an 'indices' array to get the value
                     if( indices[di]==null ) indices[di] = [];
                     var vnotin=true;
                     for( var vi=0; vi<indices[di].length; vi++ ) {
                         vv = indices[di][vi];
-                        //$("#debug").append("chk vv:"+vv+" v:"+v+"<br>");
                         if( vv==v ) {
                             vnotin=false;
-                            this.series[i].data[di][1] = vi+1;
+                            this.series[i].data[di][1] = vi+1;            // The value is known, use the indice
                         }
                     }
                     if( vnotin ) {
-                        //$("#debug").append("push:"+v+"<br>");
                         indices[di].push( v );
-                        this.series[i].data[di][1] = indices[di].length;
+                        this.series[i].data[di][1] = indices[di].length;  // The value is new, increment
                     }
                     for( var vi=0; vi<indices[di].length; vi++ ) {
                         vv = indices[di][vi];
-                        //$("#debug").append("vv:"+vv+"<br>");
                     }
+                } else if( type_of_axes( options.data_types[di] )=="time" ) {
+                    // Time values: convert it to unixtime to have the scale
+                    t = new Date(v);
+                    this.series[i].data[di][1] = Math.floor(parseInt(t.getTime())/1000);
                 } else {
+                    // Integer
                     this.series[i].data[di][1] = parseInt(this.series[i].data[di][1]);
 		}
 
                 // Update min/max
-                if( minmax[di]==null ) minmax[di] = [99999999,0];
+                if( minmax[di]==null ) minmax[di] = [Number.MAX_VALUE,0];
                 if( this.series[i].data[di][1]<minmax[di][0] ) minmax[di][0] = this.series[i].data[di][1];
                 if( this.series[i].data[di][1]>minmax[di][1] ) minmax[di][1] = this.series[i].data[di][1];
-                //$("#debug").append("minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
+                //if( type_of_axes( options.data_types[di] )=="time" )
+                //    $("#debug").append("minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
             }
         }
         for (var i=0; i<this.series.length; i++) {
             // Apply the normalization with min/max values
             for (var di=0; di<this.series[i].data.length; di++) {
                 var v = this.series[i].data[di][1];
-                var div = minmax[di][1]-minmax[di][0];
-                div = div==0?div=1:div;
-                if( type_is_string( options.data_types[di] ) ) {
+                if( type_of_axes( options.data_types[di] )=="string" ) {
+                    // Loop for the indice
                     for( var ii=0; ii<indices[di].length; ii++ )
                         if( indices[di][ii]==this.series[i].data[di][2] ) break;
-                    //$("#debug").append("SET v:"+v+" di:"+di+" dt:"+options.data_types[di]+" len:"+indices[di].length+" ii:"+ii+"<br>");
                     this.series[i].data[di][1] = (1000/(indices[di].length+1))*(ii+1);
-                } else
+                } else {
+                    // Normalize the value
+                    var div = minmax[di][1]-minmax[di][0];
+                    div = div==0?div=1:div;
                     this.series[i].data[di][1] = ((this.series[i].data[di][1]-minmax[di][0])/(div))*980+10;
+                }
                 //$("#debug").append("oldv:"+v+" newv:"+this.series[i].data[di][1]+"minmax:"+minmax[di][0]+" == "+minmax[di][1]+"<br>");
             }
             this.series[i].seriesColors = this.seriesColors;
