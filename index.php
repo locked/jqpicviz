@@ -30,6 +30,9 @@
 <script type="text/javascript" language="javascript">   
 $(document).ready(function(){
 	// Do nothing
+	$("#loadsample").click(function(){
+		$("#pgdl").html( $("#sample").html() );
+	});
 });
 
 
@@ -139,8 +142,10 @@ function updatePlot( pgdl ) {
 	<div id="debug"></div>
 	<form id="log" enctype="multipart/form-data" action="" method="POST">
 	<input type="file" name="logfile" onchange="$('#startupload').click()"/>
-	<button id="startupload">Upload Your LOG (syslog, apache, ...)</button>, or copy-paste your pgdl or log file:
+	<button id="startupload">Upload Your LOG (syslog, apache, ...)</button>
 	</form>
+	<button id="loadsample">Load sample data</button>
+	<br> or copy-paste your pgdl or log file:
 <?
 if( $_FILES ) {
 	$target_path = "uploads/";
@@ -164,6 +169,27 @@ if( $_FILES ) {
 	Next step, <button onclick="convertToPgdl($('#pgdl'));">Convert LOG to PGDL and Create Graph</button> (Can take a while and freeze your browser if a lot of data) <button onclick="parseAndUpdatePlot($('#pgdl'));">Create Graph</button>
 	</div>
 	<div id="footer">Made by Lunatic Systems, based on <a href="http://wallinfire.net/picviz/">picviz</a> - <a href="http://github.com/locked/jqpicviz">Sources here</a></div>
+
+
+	<div id="sample" style="display:none;">
+66.249.65.51 - - [19/Sep/2010:04:34:36 -0500] "GET /robots.txt HTTP/1.1" 200 51 "-" "Googlebot-Image/1.0"
+66.249.65.51 - - [19/Sep/2010:04:34:40 -0500] "GET /media//img/logo.png HTTP/1.1" 304 - "-" "Googlebot-Image/1.0"
+66.249.65.55 - - [19/Sep/2010:06:09:05 -0500] "GET /robots.txt HTTP/1.1" 200 51 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+66.249.65.55 - - [19/Sep/2010:06:09:07 -0500] "GET /zenphoto/index.php?album=image_yves/20041010%2040ans%20jean%20louis&page=5 HTTP/1.1" 301 242 "-" "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+67.195.37.168 - - [19/Sep/2010:07:09:01 -0500] "GET /robots.txt HTTP/1.0" 200 51 "-" "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)"
+67.195.37.168 - - [19/Sep/2010:14:09:04 +0200] "GET /r5/contact/ HTTP/1.0" 301 192 "-" "Mozilla/5.0 (compatible; Yahoo! Slurp/3.0; http://help.yahoo.com/help/us/ysearch/slurp)"
+67.195.37.168 - - [19/Sep/2010:07:09:04 -0500] "GET / HTTP/1.0" 200 4390 "-" "Mozilla/5.0 (compatible; Yahoo! Slurp/3.0; http://help.yahoo.com/help/us/ysearch/slurp)"
+67.195.37.168 - - [19/Sep/2010:07:09:09 -0500] "GET /media/css/theme.css HTTP/1.0" 200 5182 "http://locked.myftp.org/" "Mozilla/5.0 (compatible; Yahoo! Slurp/3.0; http://help.yahoo.com/help/us/ysearch/slurp)"
+66.249.65.51 - - [19/Sep/2010:10:13:53 -0500] "GET /robots.txt HTTP/1.1" 200 51 "-" "Googlebot-Image/1.0"
+66.249.65.51 - - [19/Sep/2010:10:13:56 -0500] "GET /zenphoto/cache/image_celebrities/Helene%20Segara/HeleneSegara51_100_cw85_ch85_thumb.jpg HTTP/1.1" 301 191 "-" "Googlebot-Image/1.0"
+208.80.194.32 - - [19/Sep/2010:10:39:04 -0500] "GET / HTTP/1.0" 200 14611 "-" "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; FunWebProducts; 3B 3.4; .NET CLR 1.1.4322)"
+119.63.193.55 - - [19/Sep/2010:11:20:16 -0500] "GET / HTTP/1.1" 200 14611 "-" "Baiduspider+(+http://www.baidu.jp/spider/)"
+190.120.232.106 - - [19/Sep/2010:14:28:40 -0500] "GET /user/soapCaller.bs HTTP/1.1" 301 20 "-" "Morfeus Fucking Scanner"
+207.46.199.201 - - [19/Sep/2010:14:33:36 -0500] "GET /robots.txt HTTP/1.1" 200 25 "-" "msnbot/2.0b (+http://search.msn.com/msnbot.htm)"
+66.249.65.51 - - [19/Sep/2010:15:53:47 -0500] "GET /robots.txt HTTP/1.1" 200 51 "-" "Googlebot-Image/1.0"
+66.249.65.51 - - [19/Sep/2010:15:53:47 -0500] "GET /zenphoto/cache/image_yves/20041010%2040ans%20jean%20louis/jeanlouis0119_100_cw85_ch85_thumb.jpg HTTP/1.1" 301 191 "-" "Googlebot-Image/1.0"
+66.249.65.51 - - [19/Sep/2010:17:44:43 -0500] "GET /robots.txt HTTP/1.1" 200 51 "-" "DoCoMo/2.0 N905i(c100;TB;W24H16) (compatible; Googlebot-Mobile/2.1; +http://www.google.com/bot.html)"
+	</div>
 <script type="text/javascript">
 var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
 document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
